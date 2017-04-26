@@ -65,6 +65,19 @@ module.exports = class extends Generator {
     return passes;
   }
 
+  updateConfig() {
+    this.config.defaults({'languages': []});
+    const languages = this.config.get('languages');
+    languages.push('typescript');
+    this.config.set('languages', languages);
+
+    this.config.defaults({
+      'typescript': {
+        'hasUi': false
+      }
+    });
+  }
+
   dependencies() {
     if (!this._check_requirements()) {
       return;
@@ -72,5 +85,35 @@ module.exports = class extends Generator {
 
     this.log('Add typescript NPM dependencies');
     return this._add_dependencies();
+  }
+
+  tslint() {
+    this.fs.copyTpl(
+        this.templatePath('tslint.json'),
+        this.destinationPath('tslint.json'),
+        {});
+  }
+
+  tsconfig() {
+    this.fs.copyTpl(
+        this.templatePath('tsconfig.json'),
+        this.destinationPath('tsconfig.json'),
+        {});
+  }
+
+  ui() {
+    return this
+        .prompt([
+          {
+            type: 'confirm',
+            name: 'useUi',
+            message: 'Does this include UI code?'
+          }
+        ])
+        .then(({useUi}) => {
+          const typescriptConfig = this.config.get('typescript');
+          typescriptConfig['hasUi'] = useUi;
+          this.config.set('typescript', typescriptConfig);
+        });
   }
 };
