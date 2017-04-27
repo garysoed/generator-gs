@@ -32,6 +32,12 @@ module.exports = class extends BaseGenerator {
     return passes;
   }
 
+  _get_gs_deps() {
+    const gsDeps = this.gsConfig.getGsDepsList();
+    this.logger.info('Detected GS Deps: ${0}', gsDeps.join(', '));
+    return gsDeps;
+  }
+
   _ts_deps() {
     const builder = new DependenciesBuilder();
     const deps = ['karma', 'tslint', 'typescript', 'webpack'];
@@ -40,34 +46,53 @@ module.exports = class extends BaseGenerator {
     return builder.build();
   }
 
-  workspace() {
-    const gsDeps = this.gsConfig.getGsDepsList();
-    this.logger.info('Detected GS Deps: ${0}', gsDeps.join(','));
+  build() {
+    this.logger.will('create root ${0}', 'BUILD');
+    this.logger.substep(() => {
+      const gsDeps = this._get_gs_deps();
+      const languages = this.gsConfig.getLanguagesList();
 
-    const builder = new DependenciesBuilder();
-    const languages = this.gsConfig.getLanguagesList();
-
-    languages.forEach((language) => {
-      switch (language) {
-        case Language.TYPESCRIPT:
-          this.logger.info('Detected language: ${0}', language);
-          this.logger.substep(() => {
-            builder.addAll(this._ts_deps());
+      const hasTypescript = languages.indexOf('typescript') >= 0;
+      this.logger.info('Detected ${0}', 'Typescript');
+      this.fs.copyTpl(
+          this.templatePath('BUILD'),
+          this.destinationPath('BUILD'),
+          {
+            'gsDeps': gsDeps,
+            'hasTypescript': hasTypescript
           });
-          break;
-        default:
-          this.logger.warn('Language ${0} is unsupported by bazel', language);
-          break;
-      }
     });
+  }
 
+  workspace() {
     this.logger.will('create ${0}', 'WORKSPACE');
-    this.fs.copyTpl(
-        this.templatePath('WORKSPACE'),
-        this.destinationPath('WORKSPACE'),
-        {
-          'localRepositories': gsDeps,
-          'newLocalRepositories': builder.build()
-        });
+    const gsDeps = this._get_gs_deps();
+
+    this.logger.substep(() => {
+      const builder = new DependenciesBuilder();
+      const languages = this.gsConfig.getLanguagesList();
+
+      languages.forEach((language) => {
+        switch (language) {
+          case Language.TYPESCRIPT:
+            this.logger.info('Detected language: ${0}', language);
+            this.logger.substep(() => {
+              builder.addAll(this._ts_deps());
+            });
+            break;
+          default:
+            this.logger.warn('Language ${0} is unsupported by bazel', language);
+            break;
+        }
+      });
+
+      this.fs.copyTpl(
+          this.templatePath('WORKSPACE'),
+          this.destinationPath('WORKSPACE'),
+          {
+            'localRepositories': gsDeps,
+            'newLocalRepositories': builder.build()
+          });
+    });
   }
 };
