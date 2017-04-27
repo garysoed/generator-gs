@@ -1,16 +1,16 @@
 package(default_visibility = ["//:internal"])
 
-# Loads all the Bazel dependencies.
-<% gsDeps.forEach((gsDep) => { %>
-load("<%- gsDep.from %>", <%- gsDep.targets.map((target) => `"${target}"`).join(', ') %>)
-<% }); %>
+# Loads all the GS Bazel dependencies.
+<% gsBazelDeps.forEach((gsBazelDep) => { -%>
+load("<%- gsBazelDep.from %>", <%- gsBazelDep.targets.map((target) => `"${target}"`).join(', ') %>)
+<% }); -%>
 
 package_group(
     name = "internal",
     packages = ["//..."]
 )
 
-<% if (hasTypescript) { %>
+<% if (hasTypescript) { -%>
 ts_library(
     name = "lib_js",
     srcs = [],
@@ -23,9 +23,9 @@ ts_binary(
     name = "bin_js",
     deps = [":lib_js"],
 )
-<% } %>
+<% } -%>
 
-<% if (isWebapp) { %>
+<% if (isWebapp) { -%>
 filegroup(
     name = "pack_template",
     srcs = [
@@ -49,9 +49,9 @@ genrule(
     outs = ["pack.js"],
     cmd = "awk 'FNR==1{print \"\"}1' $(SRCS) > $@",
 )
-<% } %>
+<% } -%>
 
-<% if (hasTypescript) { %>
+<% if (hasTypescript) { -%>
 filegroup(
     name = "tslint_config",
     srcs = ["tslint.json"]
@@ -63,13 +63,13 @@ test_suite(
         # "//src/dir:lint",
     ]
 )
-<% } %>
+<% } -%>
 
-<% if (hasTypescript) { %>
+<% if (hasTypescript) { -%>
 karma_run(
     name = "test",
     srcs = [
         # "//src/dir:test_src",
     ]
 )
-<% } %>
+<% } -%>

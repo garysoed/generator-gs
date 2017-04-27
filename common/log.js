@@ -48,6 +48,12 @@ module.exports = class {
     });
   }
 
+  listItem(item, ...values) {
+    this.level_++;
+    this._log_progress('-', chalk.white.bold, this._format_msg(item, values));
+    this.level_--;
+  }
+
   space() {
     this._log('');
   }
