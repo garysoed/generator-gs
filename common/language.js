@@ -1,11 +1,27 @@
 const Language = {
-  TYPESCRIPT: 'ts',
+  TYPESCRIPT: {code: 'ts', key: 't', render: 'Typescript'},
+
+  code(language) {
+    return language.code;
+  },
+
+  fromCode(code) {
+    for (const key in Language) {
+      const language = Language[key];
+      if (language.code === code) {
+        return language;
+      }
+    }
+
+    return null;
+  },
+
+  key(language) {
+    return language.key;
+  },
 
   render(language) {
-    switch (language) {
-      case Language.TYPESCRIPT:
-        return 'Typescript';
-    }
+    return language.render;
   }
 };
 

@@ -9,11 +9,19 @@ module.exports = class extends BaseGenerator {
     this.logger.header(['Adding typescript code']);
   }
 
-  updateConfig() {
+  main() {
+    return Promise.all([
+      this._update_config(),
+      this._tslint(),
+      this._tsconfig()
+    ]);
+  }
+
+  _update_config() {
     this.gsConfig.addLanguage(Language.TYPESCRIPT);
   }
 
-  tslint() {
+  _tslint() {
     this.logger.will('create ${0}', 'tslint.json');
     this.fs.copyTpl(
         this.templatePath('tslint.json'),
@@ -21,7 +29,7 @@ module.exports = class extends BaseGenerator {
         {});
   }
 
-  tsconfig() {
+  _tsconfig() {
     this.logger.will('create ${0}', 'tsconfig.json');
     this.fs.copyTpl(
         this.templatePath('tsconfig.json'),

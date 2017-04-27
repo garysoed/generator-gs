@@ -7,22 +7,17 @@ module.exports = class extends BaseGenerator {
     this.logger.header(['Setting up an empty project']);
   }
 
-  _run_gen(generator) {
-    const proto = Object.getPrototypeOf(generator);
-    for (const key in proto) {
-      const value = proto[key];
-      if (value instanceof Function) {
-        value();
-      }
-    }
+  main() {
+    return this._create_files();
   }
 
-  copyFiles() {
+  _create_files() {
     this.logger.will('generate ${0}', '.gitignore');
     this.fs.copy('../dev/.gitignore', '.gitignore');
 
     this.logger.will('create ${0} and ${1} directories', 'src/', 'external/');
     mkdirp('src');
     mkdirp('external');
+    return Promise.resolve();
   }
 };

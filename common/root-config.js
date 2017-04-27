@@ -1,4 +1,5 @@
 const BaseConfig = require('./base-config');
+const Language = require('./language');
 
 const Key = {
   GS_DEPS: 'gsDeps',
@@ -38,10 +39,12 @@ module.exports = class extends BaseConfig {
   }
 
   addLanguage(language) {
-    this._add_to_set(language, Key.LANGUAGES);
+    this._add_to_set(Language.code(language), Key.LANGUAGES);
   }
 
   getLanguagesList() {
-    return this._get(Key.LANGUAGES);
+    return this._get(Key.LANGUAGES).map((code) => {
+      return Language.fromCode(code);
+    });
   }
 };

@@ -5,48 +5,21 @@ const mkdirp = require('mkdirp');
 module.exports = class extends BaseGenerator {
   constructor(args, opts) {
     super(args, opts);
-    this.logger.header(['Adding GS dependency(s)']);
+    this.logger.header(['Adding GS dependency']);
   }
 
-  _add_dependencies() {
-    return this
-        .prompt([
-          {
-            type: 'input',
-            name: 'npm',
-            message: 'What is the name of the gs npm dependency? Empty string to stop adding.'
-          }
-        ])
-        .then(({npm}) => {
-          if (npm === '') {
-            return null;
-          }
+  main() {
+    if (!this._check()) {
+      return;
+    }
 
-          this.logger.will('install node module ${0}', `garysoed/${npm}`);
-          this.npmInstall(`garysoed/${npm}`, {'save': true});
-          return npm;
-        })
-        .then((npm) => {
-          if (npm === null) {
-            this.logger.will('stop adding any more dependencies');
-            return;
-          }
-
-          const name = npm.replace(/-/g, '_');
-          const target = `node_modules/${npm}`;
-          const path = `external/${name}`;
-
-          this.gsConfig.addGsDeps(name);
-
-          this.logger.will('create symlink ${0} --> ${1}', path, target);
-          fs.symlinkSync(`../${target}`, path);
-
-          this.logger.space();
-          return this._add_dependencies();
+    return this._prompting()
+        .then((inputs) => {
+          return this._add_dependency(inputs);
         });
   }
 
-  _check_requirements() {
+  _check() {
     let passes = true;
     if (!fs.existsSync('external')) {
       passes = false;
@@ -60,11 +33,28 @@ module.exports = class extends BaseGenerator {
     return passes;
   }
 
-  dependencies() {
-    if (!this._check_requirements()) {
-      return;
-    }
+  _prompting() {
+    return this
+        .prompt([
+          {
+            type: 'input',
+            name: 'npm',
+            message: 'What is the name of the gs npm dependency?'
+          }
+        ]);
+  }
 
-    return this._add_dependencies();
+  _add_dependency({npm}) {
+    this.logger.will('install node module ${0}', `garysoed/${npm}`);
+    this.npmInstall(`garysoed/${npm}`, {'save': true});
+
+    const name = npm.replace(/-/g, '_');
+    const target = `node_modules/${npm}`;
+    const path = `external/${name}`;
+
+    this.gsConfig.addGsDeps(name);
+
+    this.logger.will('create symlink ${0} --> ${1}', path, target);
+    fs.symlinkSync(`../${target}`, path);
   }
 };
