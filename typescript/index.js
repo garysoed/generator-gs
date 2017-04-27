@@ -1,20 +1,11 @@
-const Generator = require('yeoman-generator');
+const BaseGenerator = require('../common/base-generator');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 
-module.exports = class extends Generator {
+module.exports = class extends BaseGenerator {
   constructor(args, opts) {
     super(args, opts);
-    this.log('Adding typescript code');
-  }
-
-  _check_requirements() {
-    let passes = true;
-    if (!fs.existsSync('src')) {
-      passes = false;
-      this.log.error('src/ does not exist. Did you run gs:project?');
-    }
-    return passes;
+    this.logger.header(['Adding typescript code']);
   }
 
   updateConfig() {
@@ -26,11 +17,10 @@ module.exports = class extends Generator {
       languages.push('typescript');
     }
     this.config.set('languages', languages);
-
-    this.log('Languages in TS: ', this.config.get('languages'));
   }
 
   tslint() {
+    this.logger.will('create ${0}', 'tslint.json');
     this.fs.copyTpl(
         this.templatePath('tslint.json'),
         this.destinationPath('tslint.json'),
@@ -38,6 +28,7 @@ module.exports = class extends Generator {
   }
 
   tsconfig() {
+    this.logger.will('create ${0}', 'tsconfig.json');
     this.fs.copyTpl(
         this.templatePath('tsconfig.json'),
         this.destinationPath('tsconfig.json'),

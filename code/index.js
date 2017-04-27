@@ -1,10 +1,9 @@
-const Generator = require('yeoman-generator');
-const fs = require('fs');
+const BaseGenerator = require('../common/base-generator');
 
-module.exports = class extends Generator {
+module.exports = class extends BaseGenerator {
   constructor(args, opts) {
     super(args, opts);
-    this.log('Add a language to your project');
+    this.logger.header(['Addding a language to your project']);
   }
 
   promptLanguage() {

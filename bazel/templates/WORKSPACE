@@ -1,0 +1,13 @@
+<% localRepositories.forEach((repository) => { %>
+local_repository(
+    name = "<%- repository %>",
+    path = "./external/<%- repository %>",
+)
+<% }); %>
+<% newLocalRepositories.forEach((repository) => { %>
+new_local_repository(
+    name = "<%- repository %>",
+    path = "./node_modules/<%- repository %>",
+    build_file = "external/gs_tools/bazel/<%- repository %>/<%- repository %>.BUILD",
+)
+<% }); %>
