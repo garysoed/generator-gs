@@ -1,4 +1,5 @@
 const BaseGenerator = require('../common/base-generator');
+const Language = require('../common/language');
 
 class DependenciesBuilder {
   constructor(generator) {
@@ -40,18 +41,18 @@ module.exports = class extends BaseGenerator {
   }
 
   workspace() {
-    const localRepositories = this.config.get('gsDeps') || [];
-    this.logger.info('Detected GS Deps: ${0}', localRepositories.join(','));
+    const gsDeps = this.gsConfig.getGsDepsList();
+    this.logger.info('Detected GS Deps: ${0}', gsDeps.join(','));
 
     const builder = new DependenciesBuilder();
-    const languages = this.config.get('languages') || [];
+    const languages = this.gsConfig.getLanguagesList();
 
     languages.forEach((language) => {
       switch (language) {
-        case 'typescript':
+        case Language.TYPESCRIPT:
           this.logger.info('Detected language: ${0}', language);
           this.logger.substep(() => {
-            builder.addAll(this._ts_deps(), 'typescript language');
+            builder.addAll(this._ts_deps());
           });
           break;
         default:
@@ -65,7 +66,7 @@ module.exports = class extends BaseGenerator {
         this.templatePath('WORKSPACE'),
         this.destinationPath('WORKSPACE'),
         {
-          'localRepositories': localRepositories,
+          'localRepositories': gsDeps,
           'newLocalRepositories': builder.build()
         });
   }

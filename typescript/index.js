@@ -1,4 +1,5 @@
 const BaseGenerator = require('../common/base-generator');
+const Language = require('../common/language');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 
@@ -9,14 +10,7 @@ module.exports = class extends BaseGenerator {
   }
 
   updateConfig() {
-    this.config.defaults({
-      'languages': []
-    });
-    const languages = this.config.get('languages');
-    if (languages.indexOf('typescript') < 0) {
-      languages.push('typescript');
-    }
-    this.config.set('languages', languages);
+    this.gsConfig.addLanguage(Language.TYPESCRIPT);
   }
 
   tslint() {

@@ -36,9 +36,7 @@ module.exports = class extends BaseGenerator {
           const target = `node_modules/${npm}`;
           const path = `external/${name}`;
 
-          const gsDeps = this.config.get('gsDeps');
-          gsDeps.push(name);
-          this.config.set('gsDeps', gsDeps);
+          this.gsConfig.addGsDeps(name);
 
           this.logger.will('create symlink ${0} --> ${1}', path, target);
           fs.symlinkSync(`../${target}`, path);
@@ -60,12 +58,6 @@ module.exports = class extends BaseGenerator {
       this.logger.error('${0} does not exist. Did you run ${1}?', 'package.json', 'npm init');
     }
     return passes;
-  }
-
-  updateConfig() {
-    this.config.defaults({
-      'gsDeps': []
-    });
   }
 
   dependencies() {
