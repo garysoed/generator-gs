@@ -3,7 +3,8 @@ const Language = require('./language');
 
 const Key = {
   GS_DEPS: 'gsDeps',
-  LANGUAGES: 'languages'
+  LANGUAGES: 'languages',
+  PROJECT_NAME: 'name'
 }
 
 module.exports = class extends BaseConfig {
@@ -26,7 +27,8 @@ module.exports = class extends BaseConfig {
   _get_defaults() {
     return {
       [Key.GS_DEPS]: [],
-      [Key.LANGUAGES]: []
+      [Key.LANGUAGES]: [],
+      [Key.PROJECT_NAME]: 'Unnamed project'
     };
   }
 
@@ -46,5 +48,13 @@ module.exports = class extends BaseConfig {
     return this._get(Key.LANGUAGES).map((code) => {
       return Language.fromCode(code);
     });
+  }
+
+  getProjectName() {
+    return this._get(Key.PROJECT_NAME);
+  }
+
+  setProjectName(projectName) {
+    this._set(Key.PROJECT_NAME, projectName);
   }
 };

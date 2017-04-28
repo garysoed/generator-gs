@@ -54,17 +54,26 @@ module.exports = class {
     this.level_--;
   }
 
+  no(msg, ...values) {
+    this._log_progress('✗', chalk.red, this._format_msg(msg, values));
+  }
+
+  ok(msg, ...values) {
+    this._log_progress('✔', chalk.green, this._format_msg(msg, values));
+  }
+
   space() {
     this._log('');
   }
 
   substep(callback) {
     this.level_++;
-    callback();
+    const result = callback();
     this.level_--;
+    return result;
   }
 
-  warn(line, ...values) {
+  warn(msg, ...values) {
     this._log_progress('!', chalk.yellow, this._format_msg(msg, values));
   }
 

@@ -8,16 +8,31 @@ module.exports = class extends BaseGenerator {
   }
 
   main() {
-    return this._create_files();
+    return super.main();
   }
 
-  _create_files() {
+  _prompting() {
+    return this
+        .prompt([
+          {
+            type: 'input',
+            name: 'projectName',
+            message: 'What is the name of your project?',
+            default: this.appname
+          }
+        ]);
+  }
+
+  _running_tasks({projectName}) {
     this.logger.will('generate ${0}', '.gitignore');
     this.fs.copy('../dev/.gitignore', '.gitignore');
 
     this.logger.will('create ${0} and ${1} directories', 'src/', 'external/');
     mkdirp('src');
     mkdirp('external');
+
+    this.logger.will(`set project name to ${projectName}`);
+    this.gsConfig.setProjectName(projectName);
     return Promise.resolve();
   }
 };

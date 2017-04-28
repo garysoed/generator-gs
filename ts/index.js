@@ -10,26 +10,19 @@ module.exports = class extends BaseGenerator {
   }
 
   main() {
-    return Promise.all([
-      this._update_config(),
-      this._tslint(),
-      this._tsconfig()
-    ]);
+    return super.main();
   }
 
-  _update_config() {
+  _running_tasks() {
+    this.logger.will('add ${0}', Language.render(Language.TYPESCRIPT));
     this.gsConfig.addLanguage(Language.TYPESCRIPT);
-  }
 
-  _tslint() {
     this.logger.will('create ${0}', 'tslint.json');
     this.fs.copyTpl(
         this.templatePath('tslint.json'),
         this.destinationPath('tslint.json'),
         {});
-  }
 
-  _tsconfig() {
     this.logger.will('create ${0}', 'tsconfig.json');
     this.fs.copyTpl(
         this.templatePath('tsconfig.json'),

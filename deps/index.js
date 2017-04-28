@@ -9,28 +9,7 @@ module.exports = class extends BaseGenerator {
   }
 
   main() {
-    if (!this._check()) {
-      return;
-    }
-
-    return this._prompting()
-        .then((inputs) => {
-          return this._add_dependency(inputs);
-        });
-  }
-
-  _check() {
-    let passes = true;
-    if (!fs.existsSync('external')) {
-      passes = false;
-      this.logger.error('${0} does not exist. Did you run ${1}?', 'external/', 'gs:project');
-    }
-
-    if (!this.fs.exists('package.json')) {
-      passes = false;
-      this.logger.error('${0} does not exist. Did you run ${1}?', 'package.json', 'npm init');
-    }
-    return passes;
+    super.main();
   }
 
   _prompting() {
@@ -44,7 +23,25 @@ module.exports = class extends BaseGenerator {
         ]);
   }
 
-  _add_dependency({npm}) {
+  _checking() {
+    let passes = true;
+    if (!fs.existsSync('external')) {
+      passes = false;
+      this.logger.no('${0} does not exist. Did you run ${1}?', 'external/', 'gs:project');
+    } else {
+      this.logger.ok('${0} directory exists', 'external/');
+    }
+
+    if (!this.fs.exists('package.json')) {
+      passes = false;
+      this.logger.no('${0} does not exist. Did you run ${1}?', 'package.json', 'npm init');
+    } else {
+      this.logger.ok('${0} exists', 'package.json');
+    }
+    return passes;
+  }
+
+  _running_tasks({npm}) {
     this.logger.will('install node module ${0}', `garysoed/${npm}`);
     this.npmInstall(`garysoed/${npm}`, {'save': true});
 
@@ -54,7 +51,8 @@ module.exports = class extends BaseGenerator {
 
     this.gsConfig.addGsDeps(name);
 
-    this.logger.will('create symlink ${0} --> ${1}', path, target);
+    this.logger.will('create symlink ${0} -> ${1}', path, target);
     fs.symlinkSync(`../${target}`, path);
+    return Promise.resolve();
   }
 };
