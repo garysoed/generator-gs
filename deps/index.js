@@ -9,7 +9,7 @@ module.exports = class extends BaseGenerator {
   }
 
   main() {
-    super.main();
+    return super.main();
   }
 
   _prompting() {
@@ -41,9 +41,12 @@ module.exports = class extends BaseGenerator {
     return passes;
   }
 
-  _running_tasks({npm}) {
+  _collecting_tasks({npm}) {
+    const tasks = [];
     this.logger.will('install node module ${0}', `garysoed/${npm}`);
-    this.npmInstall(`garysoed/${npm}`, {'save': true});
+    tasks.push(() => {
+      this.npmInstall(`garysoed/${npm}`, {'save': true});
+    });
 
     const name = npm.replace(/-/g, '_');
     const target = `node_modules/${npm}`;
@@ -52,7 +55,9 @@ module.exports = class extends BaseGenerator {
     this.gsConfig.addGsDeps(name);
 
     this.logger.will('create symlink ${0} -> ${1}', path, target);
-    fs.symlinkSync(`../${target}`, path);
-    return Promise.resolve();
+    tasks.push(() => {
+      fs.symlinkSync(`../${target}`, path);
+    });
+    return tasks;
   }
 };

@@ -128,6 +128,18 @@ module.exports = class extends BaseGenerator {
           },
           {
             type: 'input',
+            name: 'targetName',
+            message: 'What would be the main bazel target name?'
+          },
+          {
+            type: 'list',
+            name: 'mainLanguage',
+            message: 'What is the main language of the project?',
+            choices: languageChoices,
+            default: languages[0]
+          },
+          {
+            type: 'input',
             name: 'mainDir',
             message: 'What is the directory of the main file (relative to src)?',
             when({isWebapp}) {
@@ -146,20 +158,8 @@ module.exports = class extends BaseGenerator {
           },
           {
             type: 'input',
-            name: 'targetName',
-            message: 'What would be the main bazel target name?'
-          },
-          {
-            type: 'list',
-            name: 'mainLanguage',
-            message: 'What is the main language of the project?',
-            choices: languageChoices,
-            default: languages[0]
-          },
-          {
-            type: 'input',
             name: 'testRegexp',
-            message: 'What is the regular exp for test files?',
+            message: 'What is the regular expression for test files?',
           }
         ]);
   }
@@ -181,12 +181,8 @@ module.exports = class extends BaseGenerator {
       gsBazelDepsBuilder.add('webpack', 'webpack_binary');
     }
 
-    const defs = this._get_defs(data);
     data.gsBazelDeps = gsBazelDepsBuilder.build();
     data.isWebapp = isWebapp;
-    for (const key in defs) {
-      data[key] = defs[key];
-    }
     return data;
   }
 
@@ -205,17 +201,13 @@ module.exports = class extends BaseGenerator {
     return passes;
   }
 
-  _running_tasks(data) {
-    return Promise.all([
-      this._build_task(data),
-      this._workspace_task(data),
-      this._defs_task(data)
-    ]);
+  _collecting_tasks(data) {
+    return [this._build_task(data), this._workspace_task(data), this._defs_task(data)];
   }
 
   _workspace_task({gsDeps, bazelDeps}) {
     this.logger.will('create ${0}', 'WORKSPACE');
-    this.logger.substep(() => {
+    return this.logger.substep(() => {
       this.logger.will('add the bazel deps:');
       bazelDeps.forEach((dep) => {
         this.logger.listItem('${0}', dep);
@@ -225,19 +217,22 @@ module.exports = class extends BaseGenerator {
       gsDeps.forEach((dep) => {
         this.logger.listItem('${0}', dep);
       });
-      this.fs.copyTpl(
-          this.templatePath('WORKSPACE'),
-          this.destinationPath('WORKSPACE'),
-          {
-            'localRepositories': gsDeps,
-            'newLocalRepositories': bazelDeps
-          });
+
+      return () => {
+        this.fs.copyTpl(
+            this.templatePath('WORKSPACE'),
+            this.destinationPath('WORKSPACE'),
+            {
+              'localRepositories': gsDeps,
+              'newLocalRepositories': bazelDeps
+            });
+      };
     });
   }
 
   _build_task({languages, isWebapp, mainDir, mainFile, gsBazelDeps}) {
     this.logger.will('create root ${0}', 'BUILD');
-    this.logger.substep(() => {
+    return this.logger.substep(() => {
       const hasTypescript = languages.indexOf(Language.TYPESCRIPT) >= 0;
       this.logger.info('Detected ${0}', Language.render(Language.TYPESCRIPT));
 
@@ -247,48 +242,65 @@ module.exports = class extends BaseGenerator {
           this.logger.listItem('${0}: ${1}', gsBazelDep.from, target);
         });
       });
-      this.fs.copyTpl(
-          this.templatePath('BUILD'),
-          this.destinationPath('BUILD'),
-          {
-            'gsBazelDeps': gsBazelDeps,
-            'hasTypescript': hasTypescript,
-            'isWebapp': isWebapp,
-            'mainDir': mainDir,
-            'mainFile': mainFile
-          });
+
+      this.logger.will('use ${0} as the entry point to the app', `src/${mainDir}/${mainFile}`);
+
+      return () => {
+        this.fs.copyTpl(
+            this.templatePath('BUILD'),
+            this.destinationPath('BUILD'),
+            {
+              'gsBazelDeps': gsBazelDeps,
+              'hasTypescript': hasTypescript,
+              'isWebapp': isWebapp,
+              'mainDir': mainDir,
+              'mainFile': mainFile
+            });
+      };
     });
   }
 
-  _defs_task({
+  _defs_task(data) {
+    const {
       gsBazelDeps,
       isWebapp,
-      mainBin,
       mainLanguage,
-      mainLib,
       projectName,
       targetName,
-      testBin,
-      testDebug,
-      testLint,
-      testRegexp,
-      useKarma}) {
-    this.fs.copyTpl(
-        this.templatePath('defs.bzl'),
-        this.destinationPath('defs.bzl'),
-        {
-          'gsBazelDeps': gsBazelDeps,
-          'isWebapp': isWebapp,
-          'mainBin': mainBin,
-          'mainLangCode': Language.code(mainLanguage),
-          'mainLib': mainLib,
-          'projectName': projectName,
-          'targetName': targetName,
-          'testBin': testBin,
-          'testDebug': testDebug,
-          'testLint': testLint,
-          'testRegexp': testRegexp,
-          'useKarma': useKarma,
-        });
+      testRegexp} = data;
+    this.logger.will('create ${0} for target ${1}', 'defs.bzl', targetName);
+    return this.logger.substep(() => {
+      const {
+        mainBin,
+        mainLib,
+        testBin,
+        testDebug,
+        testLint,
+        useKarma} = this._get_defs(data);
+      this.logger.will('use ${0} for prod library targets', mainLib);
+      this.logger.will('use ${0} for prod binary targets', mainBin);
+      this.logger.will('use ${0} for test binary targets', testBin);
+      this.logger.will('use ${0} for running test targets', testDebug);
+      this.logger.will('use ${0} for linting', testLint);
+      return () => {
+        this.fs.copyTpl(
+            this.templatePath('defs.bzl'),
+            this.destinationPath('defs.bzl'),
+            {
+              'gsBazelDeps': gsBazelDeps,
+              'isWebapp': isWebapp,
+              'mainBin': mainBin,
+              'mainLangCode': Language.code(mainLanguage),
+              'mainLib': mainLib,
+              'projectName': projectName,
+              'targetName': targetName,
+              'testBin': testBin,
+              'testDebug': testDebug,
+              'testLint': testLint,
+              'testRegexp': testRegexp,
+              'useKarma': useKarma,
+            });
+      };
+    });
   }
 };

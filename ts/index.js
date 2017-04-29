@@ -13,20 +13,29 @@ module.exports = class extends BaseGenerator {
     return super.main();
   }
 
-  _running_tasks() {
+  _collecting_tasks() {
+    const tasks = [];
     this.logger.will('add ${0}', Language.render(Language.TYPESCRIPT));
-    this.gsConfig.addLanguage(Language.TYPESCRIPT);
+    tasks.push(() => {
+      this.gsConfig.addLanguage(Language.TYPESCRIPT);
+    });
 
     this.logger.will('create ${0}', 'tslint.json');
-    this.fs.copyTpl(
-        this.templatePath('tslint.json'),
-        this.destinationPath('tslint.json'),
-        {});
+    tasks.push(() => {
+      this.fs.copyTpl(
+          this.templatePath('tslint.json'),
+          this.destinationPath('tslint.json'),
+          {});
+    });
 
     this.logger.will('create ${0}', 'tsconfig.json');
-    this.fs.copyTpl(
-        this.templatePath('tsconfig.json'),
-        this.destinationPath('tsconfig.json'),
-        {});
+    tasks.push(() => {
+      this.fs.copyTpl(
+          this.templatePath('tsconfig.json'),
+          this.destinationPath('tsconfig.json'),
+          {});
+    });
+
+    return tasks;
   }
 };

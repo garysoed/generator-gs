@@ -23,16 +23,21 @@ module.exports = class extends BaseGenerator {
         ]);
   }
 
-  _running_tasks({projectName}) {
+  _collecting_tasks({projectName}) {
+    const tasks = [];
     this.logger.will('generate ${0}', '.gitignore');
-    this.fs.copy('../dev/.gitignore', '.gitignore');
+    tasks.push(() => {this.fs.copy('../dev/.gitignore', '.gitignore')});
 
     this.logger.will('create ${0} and ${1} directories', 'src/', 'external/');
-    mkdirp('src');
-    mkdirp('external');
+    tasks.push(() => {
+      mkdirp('src');
+      mkdirp('external');
+    });
 
     this.logger.will(`set project name to ${projectName}`);
-    this.gsConfig.setProjectName(projectName);
-    return Promise.resolve();
+    tasks.push(() => {
+      this.gsConfig.setProjectName(projectName);
+    });
+    return tasks;
   }
 };

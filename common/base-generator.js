@@ -38,7 +38,7 @@ module.exports = class extends Generator {
     return true;
   }
 
-  _running_tasks(data) { }
+  _collecting_tasks(data) { }
 
   main() {
     return Promise.resolve()
@@ -60,17 +60,23 @@ module.exports = class extends Generator {
         })
         .then(([passes, data]) => {
           if (!passes) {
-            this.logger.no('Some conditions are not met. Terminating ...');
-            return [data, {_confirm: false}];
+            this.logger.error('Some conditions are not met. Terminating ...');
+            return [data, {_passes: false}];
           }
 
           this.logger.ok('All conditions are met');
+          return Promise.all([this.collectingTasks(data), {_passes: true}]);
+        })
+        .then(([tasks, {_passes}]) => {
+          if (!_passes) {
+            return [[], {_confirm: false}];
+          }
           const confirmedPromise = this.prompt([{
             type: 'confirm', name: '_confirm', message: 'OK to proceed?'
           }]);
-          return Promise.all([data, confirmedPromise]);
+          return Promise.all([tasks, confirmedPromise]);
         })
-        .then(([data, {_confirm}]) => {
+        .then(([tasks, {_confirm}]) => {
           this.logger.space();
 
           if (!_confirm) {
@@ -78,7 +84,7 @@ module.exports = class extends Generator {
             return;
           }
 
-          return this.running(data);
+          return this.runningTasks(tasks);
         });
   }
 
@@ -112,9 +118,18 @@ module.exports = class extends Generator {
   }
 
   /**
+   * Converts the consolidated data into an array of tasks.
+   */
+  collectingTasks(data) {
+    return this._exec_step('Collecting tasks', '_collecting_tasks', data);
+  }
+
+  /**
    * Executes all the tasks.
    */
-  running(data) {
-    return this._exec_step('Running tasks', '_running_tasks', data);
+  runningTasks(tasks) {
+    tasks.forEach((task) => {
+      task();
+    });
   }
 }
