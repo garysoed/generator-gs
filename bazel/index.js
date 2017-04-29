@@ -63,6 +63,27 @@ module.exports = class extends BaseGenerator {
     return builder.build();
   }
 
+  _get_defs({mainLanguage}) {
+    switch (mainLanguage) {
+      case Language.TYPESCRIPT:
+        return this._ts_defs();
+      default:
+        this.logger.warn('Unhandled main language: ${0}', Language.render(mainLanguage));
+        return;
+    }
+  }
+
+  _ts_defs() {
+    return {
+      testDebug: 'karma_run',
+      testBin: 'ts_binary',
+      testLint: 'tslint_test',
+      mainLib: 'ts_library',
+      mainBin: 'ts_binary',
+      useKarma: true,
+    };
+  }
+
   _ts_deps() {
     const builder = new DependenciesBuilder();
     const deps = ['karma', 'tslint', 'typescript', 'webpack'];
@@ -88,10 +109,16 @@ module.exports = class extends BaseGenerator {
 
     const bazelDeps = this._get_bazel_deps(languages);
     this.logger.info('Detected Bazel deps: ${0}', bazelDeps.join(', '));
-    return {gsDeps, languages, bazelDeps};
+
+    const projectName = this.gsConfig.getProjectName();
+    this.logger.info('Using project name: ${0}', projectName);
+    return {bazelDeps, gsDeps, languages, projectName};
   }
 
-  _prompting(initData) {
+  _prompting({languages}) {
+    const languageChoices = languages.map((language) => {
+      return {name: Language.render(language), value: language}
+    });
     return this
         .prompt([
           {
@@ -116,6 +143,23 @@ module.exports = class extends BaseGenerator {
             when({isWebapp}) {
               return isWebapp;
             }
+          },
+          {
+            type: 'input',
+            name: 'targetName',
+            message: 'What would be the main bazel target name?'
+          },
+          {
+            type: 'list',
+            name: 'mainLanguage',
+            message: 'What is the main language of the project?',
+            choices: languageChoices,
+            default: languages[0]
+          },
+          {
+            type: 'input',
+            name: 'testRegexp',
+            message: 'What is the regular exp for test files?',
           }
         ]);
   }
@@ -124,7 +168,7 @@ module.exports = class extends BaseGenerator {
     const data = super._consolidating(initData, promptData);
 
     // Add additional data.
-    const {isWebapp, languages} = data;
+    const {isWebapp, languages, mainLanguage} = data;
     const hasTypescript = languages.indexOf(Language.TYPESCRIPT) >= 0;
     const gsBazelDepsBuilder = new GsBazelDepsBuilder();
     if (hasTypescript) {
@@ -137,7 +181,12 @@ module.exports = class extends BaseGenerator {
       gsBazelDepsBuilder.add('webpack', 'webpack_binary');
     }
 
+    const defs = this._get_defs(data);
     data.gsBazelDeps = gsBazelDepsBuilder.build();
+    data.isWebapp = isWebapp;
+    for (const key in defs) {
+      data[key] = defs[key];
+    }
     return data;
   }
 
@@ -159,7 +208,8 @@ module.exports = class extends BaseGenerator {
   _running_tasks(data) {
     return Promise.all([
       this._build_task(data),
-      this._workspace_task(data)
+      this._workspace_task(data),
+      this._defs_task(data)
     ]);
   }
 
@@ -208,5 +258,37 @@ module.exports = class extends BaseGenerator {
             'mainFile': mainFile
           });
     });
+  }
+
+  _defs_task({
+      gsBazelDeps,
+      isWebapp,
+      mainBin,
+      mainLanguage,
+      mainLib,
+      projectName,
+      targetName,
+      testBin,
+      testDebug,
+      testLint,
+      testRegexp,
+      useKarma}) {
+    this.fs.copyTpl(
+        this.templatePath('defs.bzl'),
+        this.destinationPath('defs.bzl'),
+        {
+          'gsBazelDeps': gsBazelDeps,
+          'isWebapp': isWebapp,
+          'mainBin': mainBin,
+          'mainLangCode': Language.code(mainLanguage),
+          'mainLib': mainLib,
+          'projectName': projectName,
+          'targetName': targetName,
+          'testBin': testBin,
+          'testDebug': testDebug,
+          'testLint': testLint,
+          'testRegexp': testRegexp,
+          'useKarma': useKarma,
+        });
   }
 };
