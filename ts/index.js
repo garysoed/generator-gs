@@ -36,6 +36,16 @@ module.exports = class extends BaseGenerator {
           {});
     });
 
+    this.logger.will('install ${0} from npm', 'typescript');
+    tasks.push(() => {
+      this.npmInstall('typescript', {'save': true});
+    });
+
+    this.logger.will('install ${0} from npm', 'tslint');
+    tasks.push(() => {
+      this.npmInstall('tslint', {'save': true});
+    })
+
     return tasks;
   }
 };

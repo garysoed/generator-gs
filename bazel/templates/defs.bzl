@@ -3,10 +3,10 @@
 load("<%- gsBazelDep.from %>", <%- gsBazelDep.targets.map((target) => `"${target}"`).join(', ') %>)
 <% }) -%>
 
-def <% targetName %>(deps = [], test_deps = []):
-    """Generic bazel target for all packages in <% projectName %>.
+def <%- targetName %>(deps = [], test_deps = []):
+    """Generic bazel target for all packages in <%- projectName %>.
 
-    Generates some default targets for <% projectName %>.
+    Generates some default targets for <%- projectName %>.
 
     Generated targets:
         test: A `test_suite` containing all the tests in this directory.
@@ -33,11 +33,11 @@ def <% targetName %>(deps = [], test_deps = []):
     testbin_name = testlib_name + "_bin"
 
     # Prod files.
-<% if (mainLangCode === 'ts') { -%>
+<% if (mainLangCode === 'typescript') { -%>
     ts_library(
         name = lib_name,
         srcs = native.glob(["*.ts"], exclude = ["<%- testRegexp %>"]),
-        deps = ["@gs_tools//declarations", "//typings"] + deps
+        deps = ["@gs_tools//declarations"] + deps
     )
 <% } -%>
 

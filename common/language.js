@@ -1,5 +1,5 @@
 const Language = {
-  TYPESCRIPT: {code: 'ts', key: 't', render: 'Typescript'},
+  TYPESCRIPT: {code: 'typescript', key: 't', render: 'Typescript'},
 
   code(language) {
     return language.code;

@@ -12,17 +12,23 @@
         "noImplicitAny": false,
         "removeComments": true,
         "noLib": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
         "preserveConstEnums": true,
         "suppressImplicitAnyIndexErrors": true,
         "outDir": "out/",
         "rootDir": "./",
         "skipLibCheck": true,
-        "strictNullChecks": true
+        "strict": true
     },
     "exclude": [
     ],
     "include": [
         "declarations/**/*.ts",
+        "typings/globals/**/*.d.ts",
+        "src/**/*.ts",
+        "external/gs_tools/declarations/**/*.d.ts",
+        "external/gs_tools/src/**/*.ts",
         "src/**/*.ts",
         "node_modules/typescript/lib/lib.dom.d.ts",
         "node_modules/typescript/lib/lib.es2015.d.ts"

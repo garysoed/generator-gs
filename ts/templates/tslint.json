@@ -1,10 +1,10 @@
 {
+  "defaultSeverity": "error",
   "rules": {
     "class-name": true,
     "comment-format": [
       true,
-      "check-space",
-      "check-uppercase"
+      "check-space"
     ],
     "curly": true,
     "eofline": true,
@@ -19,11 +19,42 @@
     "member-access": false,
     "member-ordering": [
       true,
-      "variables-before-functions"
+      {
+        "alphabetize": true,
+        "order": [
+          "public-static-field",
+          "protected-static-field",
+          "private-static-field",
+          "public-instance-field",
+          "protected-instance-field",
+          "private-instance-field",
+          "public-constructor",
+          "protected-constructor",
+          "private-constructor",
+          {
+            "name": "instance-methods",
+            "kinds": [
+              "private-instance-method",
+              "protected-instance-method",
+              "public-instance-method"
+            ]
+          },
+          {
+            "name": "static-methods",
+            "kinds": [
+              "private-static-method",
+              "protected-static-method",
+              "public-static-method"
+            ]
+          }
+        ]
+      }
     ],
+    "no-angle-bracket-type-assertion": true,
     "no-any": false,
     "no-arg": true,
     "no-bitwise": true,
+    //"no-boolean-literal-compare": true,
     "no-conditional-assignment": true,
     "no-consecutive-blank-lines": false,
     "no-console": true,
@@ -38,7 +69,9 @@
     "no-require-imports": true,
     "no-shadowed-variable": false,
     "no-string-literal": false,
+    "no-string-throw": true,
     "no-trailing-whitespace": true,
+    "no-unnecessary-initializer": true,
     "no-unused-expression": false,
     "no-unused-variable": [
       true,
@@ -59,6 +92,8 @@
       "check-whitespace"
     ],
     "ordered-imports": true,
+    "prefer-const": true,
+    "prefer-template": true,
     "quotemark": [
       true,
       "single"
@@ -91,6 +126,7 @@
         "variable-declaration": "nospace"
       }
     ],
+    "use-isnan": true,
     "variable-name": [
       true,
       "allow-trailing-underscore",

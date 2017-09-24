@@ -86,7 +86,7 @@ module.exports = class extends BaseGenerator {
 
   _ts_deps() {
     const builder = new DependenciesBuilder();
-    const deps = ['karma', 'tslint', 'typescript', 'webpack'];
+    const deps = ['karma', 'tslint', Language.code(Language.TYPESCRIPT), 'webpack'];
     builder.addAll(deps);
     return builder.build();
   }
@@ -173,12 +173,14 @@ module.exports = class extends BaseGenerator {
     const gsBazelDepsBuilder = new GsBazelDepsBuilder();
     if (hasTypescript) {
       gsBazelDepsBuilder.add('karma', 'karma_run');
-      gsBazelDepsBuilder.add('ts', 'ts_binary');
-      gsBazelDepsBuilder.add('ts', 'ts_library');
+      gsBazelDepsBuilder.add(Language.code(Language.TYPESCRIPT), 'ts_binary');
+      gsBazelDepsBuilder.add(Language.code(Language.TYPESCRIPT), 'ts_library');
+      gsBazelDepsBuilder.add('tslint', 'tslint_test');
     }
 
     if (isWebapp) {
       gsBazelDepsBuilder.add('webpack', 'webpack_binary');
+      gsBazelDepsBuilder.add('webc', 'webc_gen_template');
     }
 
     data.gsBazelDeps = gsBazelDepsBuilder.build();
@@ -202,7 +204,18 @@ module.exports = class extends BaseGenerator {
   }
 
   _collecting_tasks(data) {
-    return [this._build_task(data), this._workspace_task(data), this._defs_task(data)];
+    return [
+      this._build_task(data),
+      this._workspace_task(data),
+      this._defs_task(data),
+      this._update_config_task(data)
+    ];
+  }
+
+  _update_config_task({targetName}) {
+    return () => {
+      this.gsConfig.setMainBazelTarget(targetName);
+    };
   }
 
   _workspace_task({gsDeps, bazelDeps}) {
